@@ -303,6 +303,14 @@ uses native memory. Independent REA instances have independent queues. Whole
 operations have a **120-second** execution deadline after reaching the queue's
 front; upstream decompilation is limited to **90 seconds**.
 
+JVM heap exhaustion while loading a package fails with `resource_constraint` and
+`details.resource: "memory"`; its remediation names `REA_JADX_HEAP_MIB` and
+`JAVA_TOOL_OPTIONS`, and `details.reported_limits` carries the heap the failing
+run observed. That heap is the failing run's limit, not the package's
+requirement. `rea doctor --provider jadx` states the requested heap and warns
+when none is set, but it reads configuration without starting the engine, so it
+reports neither the effective heap nor whether one package fits.
+
 Decoded manifest and method text have a **1 MiB** upstream byte budget and report
 truncation. Class-name pages use indexed slices of up to 4,096 names without changing the
 complete, case-sensitive search contract. A protocol frame above **8 MiB**, or combined stdout/stderr above
