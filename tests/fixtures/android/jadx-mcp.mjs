@@ -66,6 +66,8 @@ register("rea_jvm_status", () =>
 );
 register("load_apk", async ({ path }) => {
   if (mode === "stall") await new Promise(() => {});
+  if (mode === "heap-exhausted")
+    return { ...text("load failed: Java heap space"), isError: true };
   return json({
     state: "LOADED",
     apk_path: mode === "wrong-apk" ? "/different.apk" : path,

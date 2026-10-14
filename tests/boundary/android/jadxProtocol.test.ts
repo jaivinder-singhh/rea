@@ -3,6 +3,7 @@ import {
   parseJadxEnvelope,
   parseJadxJson,
   normalizeJadxText,
+  jadxHeapExhausted,
 } from "../../../src/android/JadxProtocol.js";
 import { androidInputSchemas } from "../../../src/domain/android/androidAnalysis.js";
 
@@ -29,6 +30,24 @@ it("validates provider text envelopes and rejects unsupported content rather tha
   expect(() =>
     parseJadxJson("{malformed", "inspect_android_package"),
   ).toThrowError("malformed JSON text");
+});
+
+it("recognizes the heap-exhaustion reason without claiming other JVM memory failures", () => {
+  expect(jadxHeapExhausted("load failed: Java heap space")).toBe(true);
+  expect(
+    jadxHeapExhausted(
+      "load failed: java.lang.OutOfMemoryError: Java heap space",
+    ),
+  ).toBe(true);
+  // Other JVM memory failures have different causes and different recovery, so
+  // they must keep the generic adapter failure rather than name the heap setting.
+  for (const text of [
+    "load failed: java.lang.OutOfMemoryError: Metaspace",
+    "load failed: unable to create new native thread",
+    "load failed: malformed dex",
+    "",
+  ])
+    expect(jadxHeapExhausted(text)).toBe(false);
 });
 
 it("retains UTF-8 source and recognizes only the producer's terminal truncation marker", () => {
