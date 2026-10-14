@@ -1394,8 +1394,22 @@ export const assertRizinProcessStartTimeStable = (
     );
 };
 
-const readProcStartTime = async (pid: string): Promise<string> =>
-  parseRizinProcStartTime(await readFile(`/proc/${pid}/stat`, "utf8"));
+const readProcStartTime = async (pid: string): Promise<string> => {
+  let stat: string;
+  try {
+    stat = await readFile(`/proc/${pid}/stat`, "utf8");
+  } catch (cause: unknown) {
+    if (
+      typeof cause === "object" &&
+      cause !== null &&
+      "code" in cause &&
+      cause.code === "ENOENT"
+    )
+      return "";
+    throw cause;
+  }
+  return parseRizinProcStartTime(stat);
+};
 
 const waitForCommandFrames = async (
   session: RizinDebugSession,
